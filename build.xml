@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="Carrot" basedir=".">
+    <property name="FLEX_HOME" value="/Users/pat/flex_sdk_4.1" /> 
+    <taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" />
+    <property name="DEPLOY_DIR" value="./build"/>
+    <target name="main">
+        <compc 
+            output="${DEPLOY_DIR}/Carrot.swc"
+            include-classes="com.carrot.Carrot">
+            <source-path path-element="${basedir}/src"/>
+        </compc>
+    </target>
+    <target name="clean">
+        <delete>
+            <fileset dir="${DEPLOY_DIR}" includes="Carrot.swc"/>
+        </delete>
+    </target>
+</project>
