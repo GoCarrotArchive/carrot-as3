@@ -46,6 +46,10 @@ package com.carrot
 			_udid = udid;
 		}
 
+		public function get status():String {
+			return _status;
+		}
+
 		public function validateUser(callback:Function = null):Boolean {
 			var params:Object = {
 				id: _udid
