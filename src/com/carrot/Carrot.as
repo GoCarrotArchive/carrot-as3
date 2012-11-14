@@ -69,7 +69,7 @@ package com.carrot
 				access_token: accessToken,
 				api_key: _udid
 			}
-			return httpRequest(URLRequestMethod.POST, "/games/" + _appId + "/users/users.json", params, function(event:HTTPStatusEvent):void {
+			return httpRequest(URLRequestMethod.POST, "/games/" + _appId + "/users.json", params, function(event:HTTPStatusEvent):void {
 				switch(event.status) {
 					case 201: _status = AUTHORIZED; break;
 					case 401: _status = READ_ONLY; break;
