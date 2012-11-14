@@ -138,7 +138,7 @@ package com.carrot
 
 		private function httpRequest(method:String, endpoint:String, urlParams:Object, callback:Function):Boolean {
 			var request:URLRequest = new URLRequest("https://" + _hostname + endpoint);
-			request.method = URLRequestMethod.POST;
+			request.method = method;
 			if(urlParams != null) {
 				var urlVars:URLVariables = new URLVariables();
 				for(var k:String in urlParams) {
