@@ -47,7 +47,10 @@ package com.carrot
 		}
 
 		public function validateUser(callback:Function = null):Boolean {
-			return httpRequest(URLRequestMethod.GET, "/games/" + _appId + "/users/" + _udid +".json", null, function(event:HTTPStatusEvent):void {
+			var params:Object = {
+				id: _udid
+			}
+			return httpRequest(URLRequestMethod.GET, "/games/" + _appId + "/users.json", params, function(event:HTTPStatusEvent):void {
 				switch(event.status) {
 					case 200: _status = AUTHORIZED; break;
 					case 401: _status = READ_ONLY; break;
@@ -62,10 +65,11 @@ package com.carrot
 		}
 
 		public function createUser(accessToken:String, callback:Function = null):Boolean {
-			var urlParams:URLVariables;
-			urlParams.access_token = accessToken;
-			urlParams.api_key = _udid;
-			return httpRequest(URLRequestMethod.POST, "/games/" + _appId + "/users/users.json", urlParams, function(event:HTTPStatusEvent):void {
+			var params:Object = {
+				access_token: accessToken,
+				api_key: _udid
+			}
+			return httpRequest(URLRequestMethod.POST, "/games/" + _appId + "/users/users.json", params, function(event:HTTPStatusEvent):void {
 				switch(event.status) {
 					case 201: _status = AUTHORIZED; break;
 					case 401: _status = READ_ONLY; break;
