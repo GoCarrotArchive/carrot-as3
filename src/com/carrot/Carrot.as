@@ -168,16 +168,16 @@ package com.carrot
 
 		private function getCallbackHandlerFunction(callback:Function):Function {
 			return function(event:HTTPStatusEvent):void {
+				var apiCallStatus:String = UNKNOWN;
 				switch(event.status) {
 					case 200:
-					case 201: _status = OK; break;
-					case 401: _status = READ_ONLY; break;
-					case 403: _status = BAD_SECRET; break;
-					case 404: _status = NOT_AUTHORIZED; break;
-					default: _status = UNKNOWN; break;
+					case 201: apiCallStatus = OK; break;
+					case 401: apiCallStatus = _status = READ_ONLY; break;
+					case 403: apiCallStatus = _status = BAD_SECRET; break;
+					case 404: apiCallStatus = _status = NOT_AUTHORIZED; break;
 				}
 				if(callback != null) {
-					callback(_status);
+					callback(apiCallStatus);
 				}
 			};
 		}
