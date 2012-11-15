@@ -2,16 +2,29 @@
 <project name="Carrot" basedir=".">
     <property name="FLEX_HOME" value="/Users/pat/flex_sdk_4.1" /> 
     <taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" />
-    <property name="DEPLOY_DIR" value="./build"/>
-    <target name="main">
+    <property name="DEPLOY_DIR" value="${basedir}/build"/>
+    <property name="DOCS_DIR" value="${basedir}/docs"/>
+    <target name="compile">
         <compc 
             output="${DEPLOY_DIR}/Carrot.swc"
             include-classes="com.carrot.Carrot">
             <source-path path-element="${basedir}/src"/>
         </compc>
     </target>
+    <target name="docs">
+        <delete includeEmptyDirs="true">
+            <fileset dir="${DOCS_DIR}" includes="**/*"/>
+        </delete>
+        <mkdir dir="${DOCS_DIR}"/>
+        <asdoc output="${DOCS_DIR}" lenient="true" failonerror="true" exclude-dependencies="true">
+            <compiler.source-path
+                path-element="${basedir}/src"/>
+            <doc-classes class="com.carrot.Carrot"/>
+        </asdoc>
+    </target>
     <target name="clean">
-        <delete>
+        <delete includeEmptyDirs="true">
+            <fileset dir="${DOCS_DIR}" includes="**/*"/>
             <fileset dir="${DEPLOY_DIR}" includes="Carrot.swc"/>
         </delete>
     </target>
