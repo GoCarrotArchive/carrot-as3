@@ -95,6 +95,17 @@ package com.carrot
 		}
 
 		public function postAction(actionId:String, objectInstanceId:String, actionProperties:Object = null, objectProperties:Object = null, callback:Function = null):Boolean {
+			if(objectInstanceId === null && objectProperties === null) {
+				throw new Error("objectProperties may not be null if objectInstanceId is null");
+			}
+			else if(objectProperties !== null && (
+				!objectProperties.hasOwnProperty("title") ||
+				!objectProperties.hasOwnProperty("description") ||
+				!objectProperties.hasOwnProperty("image_url") ||
+				!objectProperties.hasOwnProperty("object_type"))) {
+				throw new Error("objectProperties must contain 'object_type', 'title', 'description' and 'image_url'");
+			}
+
 			var params:Object = {
 				action_id: actionId,
 				action_properties: JSON.encode(actionProperties === null ? {} : actionProperties),
