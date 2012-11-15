@@ -28,6 +28,12 @@ package com.carrot
 	import flash.events.HTTPStatusEvent;
 
 
+	/**
+	 * Allows you to interact with the Carrot service from your Flash application.
+	 *
+	 * <p>All calls to the Carrot service are asynchronous and have an optional callback function
+	 * which will be called upon completion of the API call.</p>
+	 */
 	public class Carrot
 	{
 		public static const NOT_AUTHORIZED:String = "Carrot user has not authorized application.";
@@ -39,17 +45,33 @@ package com.carrot
 		public static const ERROR:String = "Operation unsuccessful.";
 		public static const BAD_SECRET:String = "Operation unsuccessful (bad Carrot secret).";
 
-		public function Carrot(appId:String, appSecret:String, udid:String) {
+		/**
+		 * Create a new Carrot instance.
+		 *
+		 * @param appId      Facebook Application Id for your application.
+		 * @param appSecret  Carrot Application Secret for your application.
+		 * @param udid       A per-user unique identifier. We suggest using email address or the Facebook 'third_party_id'.
+		 */
+		public function Carrot(appId:String, appSecret:String, udid:String, hostname:String = "gocarrot.com") {
 			_appId = appId;
 			_appSecret = appSecret;
-			_hostname = "gocarrot.com";
+			_hostname = hostname;
 			_udid = udid;
+			_status = UNKNOWN;
 		}
 
+		/**
+		 * The Carrot authentication status for the active user.
+		 */
 		public function get status():String {
 			return _status;
 		}
 
+		/**
+		 * Validate the active user.
+		 *
+		 * @param callback  A function which will be called with the authentication status of the active user.
+		 */
 		public function validateUser(callback:Function = null):Boolean {
 			var params:Object = {
 				id: _udid
@@ -68,6 +90,12 @@ package com.carrot
 			});
 		}
 
+		/**
+		 * Add a user to the Carrot service.
+		 *
+		 * @param accessToken  The Facebook user access token for the user to add.
+		 * @param callback     A function which will be called upon completion of the user add with the authentication status of the active user.
+		 */
 		public function createUser(accessToken:String, callback:Function = null):Boolean {
 			var params:Object = {
 				access_token: accessToken,
@@ -86,14 +114,38 @@ package com.carrot
 			});
 		}
 
+		/**
+		 * Post an achievement to the Carrot service.
+		 *
+		 * @param achievementId Carrot achivement id of the achievement to post.
+		 * @param callback      A function which will be called upon completion of the achievement post.
+		 */
 		public function postAchievement(achievementId:String, callback:Function = null):Boolean {
 			return postSignedRequest("/me/achievements.json", {achievement_id: achievementId}, callback);
 		}
 
+		/**
+		 * Post a high score to the Carrot service.
+		 *
+		 * @param score     High score value to post.
+		 * @param callback  A function which will be called upon completion of the high score post.
+		 */
 		public function postHighScore(score:uint, leaderboardId:String = "", callback:Function = null):Boolean {
 			return postSignedRequest("/me/scores.json", {value: score, leaderboard_id: leaderboardId}, callback);
 		}
 
+		/**
+		 * Post an Open Graph action to the Carrot service.
+		 *
+		 * <p>If creating an object, you are required to include 'title', 'description', 'image_url' and
+		 * 'object_type' in objectProperties.</p>
+		 *
+		 * @param actionId          Carrot action id.
+		 * @param objectInstanceId  Object instance id of the Carrot object type to create or post; use <code>null</code> if you are creating a throw-away object.
+		 * @param actionProperties  Properties to be sent along with the Carrot action, or <code>null</code>.
+		 * @param objectProperties  Properties for the new object, if creating an object, or <code>null</code>.
+		 * @param callback          A function which will be called upon completion of the action post.
+		 */
 		public function postAction(actionId:String, objectInstanceId:String, actionProperties:Object = null, objectProperties:Object = null, callback:Function = null):Boolean {
 			if(objectInstanceId === null && objectProperties === null) {
 				throw new Error("objectProperties may not be null if objectInstanceId is null");
