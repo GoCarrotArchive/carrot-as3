@@ -241,7 +241,7 @@ package com.carrot
 					case 201: apiCallStatus = OK; break;
 					case 401: apiCallStatus = _status = READ_ONLY; break;
 					case 403: apiCallStatus = _status = BAD_SECRET; break;
-					case 404: apiCallStatus = _status = NOT_AUTHORIZED; break;
+					case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
 				}
 				if(callback != null) {
 					callback(apiCallStatus);
