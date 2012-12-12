@@ -68,35 +68,12 @@ package com.carrot
 		}
 
 		/**
-		 * Validate the active user.
+		 * Validate a user with the Carrot service.
 		 *
-		 * @param callback  A function which will be called with the authentication status of the active user.
+		 * @param accessToken  The Facebook user access token for the user.
+		 * @param callback     A function which will be called upon completion of the user validation with the authentication status of the active user.
 		 */
-		public function validateUser(callback:Function = null):Boolean {
-			var params:Object = {
-				id: _udid
-			}
-			return httpRequest(URLRequestMethod.GET, "/games/" + _appId + "/users.json", params, function(event:HTTPStatusEvent):void {
-				switch(event.status) {
-					case 200: _status = AUTHORIZED; break;
-					case 401: _status = READ_ONLY; break;
-					case 403: _status = NOT_AUTHORIZED; break;
-					case 404: _status = NOT_CREATED; break;
-					default: _status = UNKNOWN; break;
-				}
-				if(callback != null) {
-					callback(_status);
-				}
-			});
-		}
-
-		/**
-		 * Add a user to the Carrot service.
-		 *
-		 * @param accessToken  The Facebook user access token for the user to add.
-		 * @param callback     A function which will be called upon completion of the user add with the authentication status of the active user.
-		 */
-		public function createUser(accessToken:String, callback:Function = null):Boolean {
+		public function validateUser(accessToken:String, callback:Function = null):Boolean {
 			var params:Object = {
 				access_token: accessToken,
 				api_key: _udid
