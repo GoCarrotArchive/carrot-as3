@@ -107,8 +107,8 @@ package com.carrot
 		 * @param score     High score value to post.
 		 * @param callback  A function which will be called upon completion of the high score post.
 		 */
-		public function postHighScore(score:uint, leaderboardId:String = "", callback:Function = null):Boolean {
-			return postSignedRequest("/me/scores.json", {value: score, leaderboard_id: leaderboardId}, callback);
+		public function postHighScore(score:uint, callback:Function = null):Boolean {
+			return postSignedRequest("/me/scores.json", {value: score}, callback);
 		}
 
 		/**
