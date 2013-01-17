@@ -112,6 +112,15 @@ package com.carrot
 		}
 
 		/**
+		 * Get the list of high scores for the current Carrot user and their Facebook friends.
+		 *
+		 * @param callback A function which will be called upon completion of the high score query.
+		 */
+		public function getFriendScores(callback:Function = null):Boolean {
+			return getSignedRequest("/me/scores.json", {}, callback);
+		}
+
+		/**
 		 * Post an Open Graph action to the Carrot service.
 		 *
 		 * <p>If creating an object, you are required to include 'title', 'description', 'image_url' and
@@ -184,14 +193,28 @@ package com.carrot
 			return postSignedRequest("/me/like.json", {object: "object:" + objectInstanceId}, callback);
 		}
 
+		private function getSignedRequest(endpoint:String, queryParams:Object, callback:Function):Boolean {
+			return makeSignedRequest(endpoint, URLRequestMethod.GET, queryParams, callback);
+		}
+
 		private function postSignedRequest(endpoint:String, queryParams:Object, callback:Function):Boolean {
 			var timestamp:Date = new Date();
 
 			var urlParams:Object = {
-				api_key: _udid,
-				game_id: _appId,
 				request_date: Math.round(timestamp.getTime() / 1000),
 				request_id: UIDUtil.createUID()
+			};
+
+			for(var k:String in queryParams) {
+				urlParams[k] = queryParams[k];
+			}
+			return makeSignedRequest(endpoint, URLRequestMethod.POST, urlParams, callback);
+		}
+
+		private function makeSignedRequest(endpoint:String, method:String, queryParams:Object, callback:Function):Boolean {
+			var urlParams:Object = {
+				api_key: _udid,
+				game_id: _appId
 			};
 
 			for(var k:String in queryParams) {
@@ -210,7 +233,7 @@ package com.carrot
 			}
 			urlString = urlString.slice(0, urlString.length - 1);
 
-			var signString:String = "POST\n" + _hostname + "\n" + endpoint + "\n" + urlString;
+			var signString:String = method + "\n" + _hostname + "\n" + endpoint + "\n" + urlString;
 			var digest:String = HMAC.hash(_appSecret, signString, SHA256);
 			var hashBytes:ByteArray = new ByteArray();
 			for(var i:uint = 0; i < digest.length; i += 2)
@@ -219,7 +242,7 @@ package com.carrot
 			encoder.encodeBytes(hashBytes);
 			urlParams.sig = encoder.toString();
 
-			return httpRequest(URLRequestMethod.POST, endpoint, urlParams, getCallbackHandlerFunction(callback));
+			return httpRequest(method, endpoint, urlParams, callback);
 		}
 
 		private function httpRequest(method:String, endpoint:String, urlParams:Object, callback:Function):Boolean {
@@ -235,7 +258,25 @@ package com.carrot
 
 			var loader:URLLoader = new URLLoader();
 			if(callback != null) {
-				loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, callback);
+				loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, function(event:HTTPStatusEvent):void {
+					var apiCallStatus:String = UNKNOWN;
+					switch(event.status) {
+						case 200:
+						case 201: _status = AUTHORIZED; apiCallStatus = OK; break;
+						case 401: apiCallStatus = _status = READ_ONLY; break;
+						case 403: apiCallStatus = _status = BAD_SECRET; break;
+						case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
+					}
+					if(method === URLRequestMethod.POST && callback != null) {
+						callback(apiCallStatus);
+					}
+				});
+
+				if(method != URLRequestMethod.POST && callback != null) {
+					loader.addEventListener(Event.COMPLETE, function(event:Event):void {
+						callback(loader.data);
+					});
+				}
 			}
 
 			try {
@@ -246,22 +287,6 @@ package com.carrot
 				trace(error);
 			}
 			return false;
-		}
-
-		private function getCallbackHandlerFunction(callback:Function):Function {
-			return function(event:HTTPStatusEvent):void {
-				var apiCallStatus:String = UNKNOWN;
-				switch(event.status) {
-					case 200:
-					case 201: apiCallStatus = OK; break;
-					case 401: apiCallStatus = _status = READ_ONLY; break;
-					case 403: apiCallStatus = _status = BAD_SECRET; break;
-					case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
-				}
-				if(callback != null) {
-					callback(apiCallStatus);
-				}
-			};
 		}
 
 		private var _udid:String;
