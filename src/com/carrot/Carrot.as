@@ -1,4 +1,4 @@
-/* Carrot -- Copyright (C) 2012 Carrot Inc.
+/* Carrot -- Copyright (C) 2012 GoCarrot Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
