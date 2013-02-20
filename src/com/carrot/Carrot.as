@@ -112,15 +112,6 @@ package com.carrot
 		}
 
 		/**
-		 * Get the list of high scores for the current Carrot user and their Facebook friends.
-		 *
-		 * @param callback A function which will be called upon completion of the high score query.
-		 */
-		public function getFriendScores(callback:Function = null):Boolean {
-			return getSignedRequest("/me/scores.json", {}, callback);
-		}
-
-		/**
 		 * Post an Open Graph action to the Carrot service.
 		 *
 		 * <p>If creating an object, you are required to include 'title', 'description', 'image_url' and
