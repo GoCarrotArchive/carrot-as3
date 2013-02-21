@@ -70,12 +70,12 @@ package com.carrot
 		/**
 		 * Validate a user with the Carrot service.
 		 *
-		 * @param accessToken  The Facebook user access token for the user.
-		 * @param callback     A function which will be called upon completion of the user validation with the authentication status of the active user.
+		 * @param accessTokenOrFacebookId  The Facebook user access token or Facebook Id for the user.
+		 * @param callback                 A function which will be called upon completion of the user validation with the authentication status of the active user.
 		 */
-		public function validateUser(accessToken:String, callback:Function = null):Boolean {
+		public function validateUser(accessTokenOrFacebookId:String, callback:Function = null):Boolean {
 			var params:Object = {
-				access_token: accessToken,
+				access_token: accessTokenOrFacebookId,
 				api_key: _udid
 			}
 			return httpRequest(URLRequestMethod.POST, "/games/" + _appId + "/users.json", params, function(event:HTTPStatusEvent):void {
