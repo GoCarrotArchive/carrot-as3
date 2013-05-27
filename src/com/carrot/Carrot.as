@@ -22,12 +22,12 @@ package com.carrot
 	import flash.net.URLVariables;
 	import flash.net.URLLoader;
 	import flash.events.Event;
-	import mx.utils.Base64Encoder;
 	import flash.utils.ByteArray;
 	import flash.events.HTTPStatusEvent;
 	import ru.inspirit.net.MultipartURLLoader;
 	import ru.inspirit.net.events.MultipartURLLoaderEvent;
 	import com.laiyonghao.Uuid;
+	import com.sociodox.utils.Base64;
 
 	/**
 	 * Allows you to interact with the Carrot service from your Flash application.
@@ -221,9 +221,7 @@ package com.carrot
 			var hashBytes:ByteArray = new ByteArray();
 			for(var i:uint = 0; i < digest.length; i += 2)
 				hashBytes.writeByte(parseInt(digest.charAt(i) + digest.charAt(i + 1), 16));
-			var encoder:Base64Encoder = new Base64Encoder();
-			encoder.encodeBytes(hashBytes);
-			urlParams.sig = encoder.toString();
+			urlParams.sig = Base64.encode(hashBytes);
 
 			return httpRequest(method, endpoint, urlParams, callback);
 		}
