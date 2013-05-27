@@ -114,8 +114,7 @@ package com.carrot
 		/**
 		 * Post an Open Graph action to the Carrot service.
 		 *
-		 * <p>If creating an object, you are required to include 'title', 'description', 'image_url' and
-		 * 'object_type' in objectProperties.</p>
+		 * <p>If creating an object, you are required to include 'object_type' in objectProperties.</p>
 		 *
 		 * @param actionId          Carrot action id.
 		 * @param objectInstanceId  Object instance id of the Carrot object type to create or post; use <code>null</code> if you are creating a throw-away object.
@@ -127,12 +126,8 @@ package com.carrot
 			if(objectInstanceId === null && objectProperties === null) {
 				throw new Error("objectProperties may not be null if objectInstanceId is null");
 			}
-			else if(objectProperties !== null && (
-				!objectProperties.hasOwnProperty("title") ||
-				!objectProperties.hasOwnProperty("description") ||
-				!objectProperties.hasOwnProperty("image_url") ||
-				!objectProperties.hasOwnProperty("object_type"))) {
-				throw new Error("objectProperties must contain 'object_type', 'title', 'description' and 'image_url'");
+			else if(objectProperties !== null && !objectProperties.hasOwnProperty("object_type")) {
+				throw new Error("objectProperties must contain 'object_type'");
 			}
 
 			var params:Object = {
