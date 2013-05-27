@@ -26,6 +26,8 @@ package com.carrot
 	import mx.utils.Base64Encoder;
 	import flash.utils.ByteArray;
 	import flash.events.HTTPStatusEvent;
+	import ru.inspirit.net.MultipartURLLoader;
+	import ru.inspirit.net.events.MultipartURLLoaderEvent;
 
 
 	/**
@@ -179,10 +181,6 @@ package com.carrot
 			return postSignedRequest("/me/like.json", {object: "object:" + objectInstanceId}, callback);
 		}
 
-		private function getSignedRequest(endpoint:String, queryParams:Object, callback:Function):Boolean {
-			return makeSignedRequest(endpoint, URLRequestMethod.GET, queryParams, callback);
-		}
-
 		private function postSignedRequest(endpoint:String, queryParams:Object, callback:Function):Boolean {
 			var timestamp:Date = new Date();
 
@@ -232,17 +230,13 @@ package com.carrot
 		}
 
 		private function httpRequest(method:String, endpoint:String, urlParams:Object, callback:Function):Boolean {
-			var request:URLRequest = new URLRequest("https://" + _hostname + endpoint);
-			request.method = method;
+			var loader:MultipartURLLoader = new MultipartURLLoader();
 			if(urlParams != null) {
-				var urlVars:URLVariables = new URLVariables();
 				for(var k:String in urlParams) {
-					urlVars[k] = urlParams[k];
+					loader.addVariable(k, urlParams[k]);
 				}
-				request.data = urlVars;
 			}
 
-			var loader:URLLoader = new URLLoader();
 			if(callback != null) {
 				loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, function(event:HTTPStatusEvent):void {
 					var apiCallStatus:String = UNKNOWN;
@@ -257,16 +251,10 @@ package com.carrot
 						callback(apiCallStatus);
 					}
 				});
-
-				if(method != URLRequestMethod.POST && callback != null) {
-					loader.addEventListener(Event.COMPLETE, function(event:Event):void {
-						callback(loader.data);
-					});
-				}
 			}
 
 			try {
-				loader.load(request);
+				loader.load("https://" + _hostname + endpoint);
 				return true;
 			}
 			catch(error:Error) {
