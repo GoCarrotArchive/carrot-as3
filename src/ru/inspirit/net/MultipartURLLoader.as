@@ -385,7 +385,7 @@
 
 		private function closeFilePartsData(postData:ByteArray):ByteArray
 		{
-			var i:uint;
+/*			var i:uint;
 			var bytes:String;
 
 			postData = LINEBREAK(postData);
@@ -402,7 +402,7 @@
 				postData.writeByte( bytes.charCodeAt(i) );
 			}
 			postData = LINEBREAK(postData);
-
+*/
 			return postData;
 		}
 
@@ -411,6 +411,7 @@
 			var i:uint;
 			var bytes:String;
 
+/*
 			postData = BOUNDARY(postData);
 			postData = LINEBREAK(postData);
 			bytes = 'Content-Disposition: form-data; name="Filename"';
@@ -421,7 +422,7 @@
 			postData = LINEBREAK(postData);
 			postData.writeUTFBytes(part.fileName);
 			postData = LINEBREAK(postData);
-
+*/
 			postData = BOUNDARY(postData);
 			postData = LINEBREAK(postData);
 			bytes = 'Content-Disposition: form-data; name="' + part.dataField + '"; filename="';
