@@ -22,13 +22,12 @@ package com.carrot
 	import flash.net.URLVariables;
 	import flash.net.URLLoader;
 	import flash.events.Event;
-	import mx.utils.UIDUtil;
 	import mx.utils.Base64Encoder;
 	import flash.utils.ByteArray;
 	import flash.events.HTTPStatusEvent;
 	import ru.inspirit.net.MultipartURLLoader;
 	import ru.inspirit.net.events.MultipartURLLoaderEvent;
-
+	import com.laiyonghao.Uuid;
 
 	/**
 	 * Allows you to interact with the Carrot service from your Flash application.
@@ -186,7 +185,7 @@ package com.carrot
 
 			var urlParams:Object = {
 				request_date: Math.round(timestamp.getTime() / 1000),
-				request_id: UIDUtil.createUID()
+				request_id: new Uuid().toString()
 			};
 
 			for(var k:String in queryParams) {
