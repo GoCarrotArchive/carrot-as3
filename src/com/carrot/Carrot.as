@@ -134,8 +134,8 @@ package com.carrot
 
 			var params:Object = {
 				action_id: actionId,
-				action_properties: JSON.encode(actionProperties === null ? {} : actionProperties),
-				object_properties: JSON.encode(objectProperties === null ? {} : objectProperties)
+				action_properties: com.carrot.adobe.serialization.json.JSON.encode(actionProperties === null ? {} : actionProperties),
+				object_properties: com.carrot.adobe.serialization.json.JSON.encode(objectProperties === null ? {} : objectProperties)
 			}
 			if(objectInstanceId != null) {
 				params.object_instance_id = objectInstanceId;
