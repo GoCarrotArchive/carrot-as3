@@ -9,6 +9,9 @@
         <compc 
             output="${DEPLOY_DIR}/Carrot.swc"
             include-classes="com.carrot.Carrot">
+            <compiler.include-libraries dir="${basedir}/libs" append="true">
+                <include name="PNGEncoder2_normal.swc"/>
+            </compiler.include-libraries>
             <source-path path-element="${basedir}/src"/>
         </compc>
     </target>
