@@ -55,6 +55,19 @@ package com.carrot
 		 * @param udid       A per-user unique identifier. We suggest using email address or the Facebook 'third_party_id'.
 		 */
 		public function Carrot(appId:String, appSecret:String, udid:String, hostname:String = "gocarrot.com") {
+			if(appId === null) {
+				throw new Error("appId must not be null");
+			}
+			else if(appSecret === null) {
+				throw new Error("appSecret must not be null");
+			}
+			else if(udid === null) {
+				throw new Error("udid must not be null");
+			}
+			else if(hostname === null) {
+				throw new Error("hostname must not be null");
+			}
+
 			_appId = appId;
 			_appSecret = appSecret;
 			_hostname = hostname;
@@ -76,6 +89,10 @@ package com.carrot
 		 * @param callback                 A function which will be called upon completion of the user validation with the authentication status of the active user.
 		 */
 		public function validateUser(accessTokenOrFacebookId:String, callback:Function = null):Boolean {
+			if(accessTokenOrFacebookId === null) {
+				throw new Error("accessTokenOrFacebookId must not be null");
+			}
+
 			var params:Object = {
 				access_token: accessTokenOrFacebookId,
 				api_key: _udid
@@ -100,6 +117,9 @@ package com.carrot
 		 * @param callback      A function which will be called upon completion of the achievement post.
 		 */
 		public function postAchievement(achievementId:String, callback:Function = null):Boolean {
+			if(achievementId === null) {
+				throw new Error("achievementId must not be null");
+			}
 			return postSignedRequest("/me/achievements.json", {achievement_id: achievementId}, null, callback);
 		}
 
@@ -126,7 +146,10 @@ package com.carrot
 		 * @param callback          A function which will be called upon completion of the action post.
 		 */
 		public function postAction(actionId:String, objectInstanceId:String, actionProperties:Object = null, objectProperties:Object = null, bitmapData:BitmapData = null, callback:Function = null):Boolean {
-			if(objectInstanceId === null && objectProperties === null) {
+			if(actionId === null) {
+				throw new Error("actionId must not be null");
+			}
+			else if(objectInstanceId === null && objectProperties === null) {
 				throw new Error("objectProperties may not be null if objectInstanceId is null");
 			}
 			else if(objectProperties !== null && !objectProperties.hasOwnProperty("object_type")) {
@@ -172,6 +195,9 @@ package com.carrot
 		 * @param callback      A function which will be called upon completion of the action post.
 		 */
 		public function likeAchievement(achievementId:String, callback:Function = null):Boolean {
+			if(achievementId === null) {
+				throw new Error("achievementId must not be null");
+			}
 			return postSignedRequest("/me/like.json", {object: "achievement:" + achievementId}, null, callback);
 		}
 
@@ -182,6 +208,9 @@ package com.carrot
 		 * @param callback         A function which will be called upon completion of the action post.
 		 */
 		public function likeObject(objectInstanceId:String, callback:Function = null):Boolean {
+			if(objectInstanceId === null) {
+				throw new Error("objectInstanceId must not be null");
+			}
 			return postSignedRequest("/me/like.json", {object: "object:" + objectInstanceId}, null, callback);
 		}
 
