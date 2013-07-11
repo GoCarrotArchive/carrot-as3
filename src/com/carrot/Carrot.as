@@ -107,7 +107,7 @@ package com.carrot
 				if(callback !== null) {
 					callback(_status);
 				}
-			});
+			}, true);
 		}
 
 		/**
@@ -268,7 +268,7 @@ package com.carrot
 			return httpRequest(method, endpoint, urlParams, pngBytes, callback);
 		}
 
-		private function httpRequest(method:String, endpoint:String, urlParams:Object, pngBytes:ByteArray, callback:Function):Boolean {
+		private function httpRequest(method:String, endpoint:String, urlParams:Object, pngBytes:ByteArray, callback:Function, httpStatusCallback:Boolean = false):Boolean {
 			var loader:MultipartURLLoader = new MultipartURLLoader();
 			if(urlParams !== null) {
 				for(var k:String in urlParams) {
@@ -281,19 +281,24 @@ package com.carrot
 			}
 
 			if(callback !== null) {
-				loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, function(event:HTTPStatusEvent):void {
-					var apiCallStatus:String = UNKNOWN;
-					switch(event.status) {
-						case 200:
-						case 201: _status = AUTHORIZED; apiCallStatus = OK; break;
-						case 401: apiCallStatus = _status = READ_ONLY; break;
-						case 403: apiCallStatus = _status = BAD_SECRET; break;
-						case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
-					}
-					if(method === URLRequestMethod.POST && callback !== null) {
-						callback(apiCallStatus);
-					}
-				});
+				if(httpStatusCallback) {
+					loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, callback);
+				}
+				else {
+					loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, function(event:HTTPStatusEvent):void {
+						var apiCallStatus:String = UNKNOWN;
+						switch(event.status) {
+							case 200:
+							case 201: _status = AUTHORIZED; apiCallStatus = OK; break;
+							case 401: apiCallStatus = _status = READ_ONLY; break;
+							case 403: apiCallStatus = _status = BAD_SECRET; break;
+							case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
+						}
+						if(method === URLRequestMethod.POST && callback !== null) {
+							callback(apiCallStatus);
+						}
+					});
+				}
 			}
 
 			try {
