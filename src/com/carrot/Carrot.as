@@ -24,6 +24,7 @@ package com.carrot
 	import flash.events.Event;
 	import flash.utils.ByteArray;
 	import flash.display.BitmapData;
+	import flash.system.Capabilities;
 	import flash.events.HTTPStatusEvent;
 	import ru.inspirit.net.MultipartURLLoader;
 	import ru.inspirit.net.events.MultipartURLLoaderEvent;
@@ -47,6 +48,8 @@ package com.carrot
 		public static const ERROR:String = "Operation unsuccessful.";
 		public static const BAD_SECRET:String = "Operation unsuccessful (bad Carrot secret).";
 
+		public static const SDKVersion:String = "1.1";
+
 		/**
 		 * Create a new Carrot instance.
 		 *
@@ -54,7 +57,7 @@ package com.carrot
 		 * @param appSecret  Carrot Application Secret for your application.
 		 * @param udid       A per-user unique identifier. We suggest using email address or the Facebook 'third_party_id'.
 		 */
-		public function Carrot(appId:String, appSecret:String, udid:String, hostname:String = "gocarrot.com") {
+		public function Carrot(appId:String, appSecret:String, udid:String) {
 			if(appId === null) {
 				throw new Error("appId must not be null");
 			}
@@ -64,15 +67,16 @@ package com.carrot
 			else if(udid === null) {
 				throw new Error("udid must not be null");
 			}
-			else if(hostname === null) {
-				throw new Error("hostname must not be null");
-			}
 
 			_appId = appId;
 			_appSecret = appSecret;
-			_hostname = hostname;
 			_udid = udid;
 			_status = UNKNOWN;
+
+			// Perform services discovery
+			if(!performServicesDiscovery()) {
+				trace("Could not perform services discovery. Carrot is offline.");
+			}
 		}
 
 		/**
@@ -97,7 +101,7 @@ package com.carrot
 				access_token: accessTokenOrFacebookId,
 				api_key: _udid
 			}
-			return httpRequest(URLRequestMethod.POST, "/games/" + _appId + "/users.json", params, null, function(event:HTTPStatusEvent):void {
+			return httpRequest(_authHostname, URLRequestMethod.POST, "/games/" + _appId + "/users.json", params, null, function(event:HTTPStatusEvent):void {
 				switch(event.status) {
 					case 201: _status = AUTHORIZED; break;
 					case 401: _status = READ_ONLY; break;
@@ -172,6 +176,31 @@ package com.carrot
 
 		/* Private methods */
 
+		private function performServicesDiscovery():Boolean {
+			var loader:MultipartURLLoader = new MultipartURLLoader();
+			loader.addVariable("sdk_version", SDKVersion);
+			loader.addVariable("sdk_platform", Capabilities.os.replace(" ", "_").toLowerCase());
+			loader.addVariable("game_id", _appId);
+			loader.addVariable("_method", "GET");
+
+			loader.addEventListener(Event.COMPLETE, function(event:Event):void {
+				var services:Object = com.carrot.adobe.serialization.json.JSON.decode(event.target.loader.data.toString());
+				_postHostname = services.post;
+				_authHostname = services.auth;
+				_metricsHostname = services.metrics;
+			});
+
+			try {
+				loader.load("http://" + _servicesDiscoveryHost + "/services.json");
+				return true;
+			}
+			catch(error:Error) {
+				trace(error);
+			}
+
+			return false;
+		}
+
 		private function postSignedRequest(endpoint:String, queryParams:Object, bitmapData:BitmapData, callback:Function, httpStatusCallback:Boolean = false):Boolean {
 			var timestamp:Date = new Date();
 
@@ -183,10 +212,10 @@ package com.carrot
 			for(var k:String in queryParams) {
 				urlParams[k] = queryParams[k];
 			}
-			return makeSignedRequest(endpoint, URLRequestMethod.POST, urlParams, bitmapData, callback, httpStatusCallback);
+			return makeSignedRequest(_postHostname, endpoint, URLRequestMethod.POST, urlParams, bitmapData, callback, httpStatusCallback);
 		}
 
-		private function makeSignedRequest(endpoint:String, method:String, queryParams:Object, bitmapData:BitmapData, callback:Function, httpStatusCallback:Boolean = false):Boolean {
+		private function makeSignedRequest(hostname:String, endpoint:String, method:String, queryParams:Object, bitmapData:BitmapData, callback:Function, httpStatusCallback:Boolean = false):Boolean {
 			var urlParams:Object = {
 				api_key: _udid,
 				game_id: _appId
@@ -216,17 +245,21 @@ package com.carrot
 			}
 			urlString = urlString.slice(0, urlString.length - 1);
 
-			var signString:String = method + "\n" + _hostname + "\n" + endpoint + "\n" + urlString;
+			var signString:String = method + "\n" + hostname + "\n" + endpoint + "\n" + urlString;
 			var digest:String = HMAC.hash(_appSecret, signString, SHA256);
 			var hashBytes:ByteArray = new ByteArray();
 			for(var i:uint = 0; i < digest.length; i += 2)
 				hashBytes.writeByte(parseInt(digest.charAt(i) + digest.charAt(i + 1), 16));
 			urlParams.sig = Base64.encode(hashBytes);
 
-			return httpRequest(method, endpoint, urlParams, pngBytes, callback, httpStatusCallback);
+			return httpRequest(hostname, method, endpoint, urlParams, pngBytes, callback, httpStatusCallback);
 		}
 
-		private function httpRequest(method:String, endpoint:String, urlParams:Object, pngBytes:ByteArray, callback:Function, httpStatusCallback:Boolean = false):Boolean {
+		private function httpRequest(hostname:String, method:String, endpoint:String, urlParams:Object, pngBytes:ByteArray, callback:Function, httpStatusCallback:Boolean = false):Boolean {
+			if(hostname === null) {
+				return false;
+			}
+
 			var loader:MultipartURLLoader = new MultipartURLLoader();
 			if(urlParams !== null) {
 				for(var k:String in urlParams) {
@@ -260,7 +293,7 @@ package com.carrot
 			}
 
 			try {
-				loader.load("https://" + _hostname + endpoint);
+				loader.load("https://" + hostname + endpoint);
 				return true;
 			}
 			catch(error:Error) {
@@ -271,8 +304,13 @@ package com.carrot
 
 		private var _udid:String;
 		private var _appId:String;
-		private var _hostname:String;
 		private var _appSecret:String;
 		private var _status:String;
+
+		private var _postHostname:String;
+		private var _authHostname:String;
+		private var _metricsHostname:String;
+
+		private static const _servicesDiscoveryHost:String = "services.gocarrot.com";
 	}
 }
