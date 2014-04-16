@@ -170,7 +170,9 @@ package com.carrot
 			return postSignedRequest("/me/actions.json", params, bitmapData, callback);
 		}
 
-		private function postSignedRequest(endpoint:String, queryParams:Object, bitmapData:BitmapData, callback:Function):Boolean {
+		/* Private methods */
+
+		private function postSignedRequest(endpoint:String, queryParams:Object, bitmapData:BitmapData, callback:Function, httpStatusCallback:Boolean = false):Boolean {
 			var timestamp:Date = new Date();
 
 			var urlParams:Object = {
@@ -181,10 +183,10 @@ package com.carrot
 			for(var k:String in queryParams) {
 				urlParams[k] = queryParams[k];
 			}
-			return makeSignedRequest(endpoint, URLRequestMethod.POST, urlParams, bitmapData, callback);
+			return makeSignedRequest(endpoint, URLRequestMethod.POST, urlParams, bitmapData, callback, httpStatusCallback);
 		}
 
-		private function makeSignedRequest(endpoint:String, method:String, queryParams:Object, bitmapData:BitmapData, callback:Function):Boolean {
+		private function makeSignedRequest(endpoint:String, method:String, queryParams:Object, bitmapData:BitmapData, callback:Function, httpStatusCallback:Boolean = false):Boolean {
 			var urlParams:Object = {
 				api_key: _udid,
 				game_id: _appId
@@ -221,7 +223,7 @@ package com.carrot
 				hashBytes.writeByte(parseInt(digest.charAt(i) + digest.charAt(i + 1), 16));
 			urlParams.sig = Base64.encode(hashBytes);
 
-			return httpRequest(method, endpoint, urlParams, pngBytes, callback);
+			return httpRequest(method, endpoint, urlParams, pngBytes, callback, httpStatusCallback);
 		}
 
 		private function httpRequest(method:String, endpoint:String, urlParams:Object, pngBytes:ByteArray, callback:Function, httpStatusCallback:Boolean = false):Boolean {
