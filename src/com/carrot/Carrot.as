@@ -170,50 +170,6 @@ package com.carrot
 			return postSignedRequest("/me/actions.json", params, bitmapData, callback);
 		}
 
-		/**
-		 * Post a 'Like' action that likes the Game's Facebook Page.
-		 *
-		 * @param callback A function which will be called upon completion of the action post.
-		 */
-		public function likeGame(callback:Function = null):Boolean {
-			return postSignedRequest("/me/like.json", {object: "game"}, null, callback);
-		}
-
-		/**
-		 * Post a 'Like' action that likes the Publisher's Facebook Page.
-		 *
-		 * @param callback A function which will be called upon completion of the action post.
-		 */
-		public function likePublisher(callback:Function = null):Boolean {
-			return postSignedRequest("/me/like.json", {object: "publisher"}, null, callback);
-		}
-
-		/**
-		 * Post a 'Like' action that likes an achievement.
-		 *
-		 * @param achievementId The achievement identifier.
-		 * @param callback      A function which will be called upon completion of the action post.
-		 */
-		public function likeAchievement(achievementId:String, callback:Function = null):Boolean {
-			if(achievementId === null) {
-				throw new Error("achievementId must not be null");
-			}
-			return postSignedRequest("/me/like.json", {object: "achievement:" + achievementId}, null, callback);
-		}
-
-		/**
-		 * Post a 'Like' action that likes an Open Graph object.
-		 *
-		 * @param objectInstanceId The instance id of the Carrot object.
-		 * @param callback         A function which will be called upon completion of the action post.
-		 */
-		public function likeObject(objectInstanceId:String, callback:Function = null):Boolean {
-			if(objectInstanceId === null) {
-				throw new Error("objectInstanceId must not be null");
-			}
-			return postSignedRequest("/me/like.json", {object: "object:" + objectInstanceId}, null, callback);
-		}
-
 		private function postSignedRequest(endpoint:String, queryParams:Object, bitmapData:BitmapData, callback:Function):Boolean {
 			var timestamp:Date = new Date();
 
