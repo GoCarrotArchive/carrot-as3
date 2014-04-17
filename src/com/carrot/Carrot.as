@@ -56,8 +56,9 @@ package com.carrot
 		 * @param appId      Facebook Application Id for your application.
 		 * @param appSecret  Carrot Application Secret for your application.
 		 * @param udid       A per-user unique identifier. We suggest using email address or the Facebook 'third_party_id'.
+		 * @param versionId  A string specifying the current version of your application for metrics reporting.
 		 */
-		public function Carrot(appId:String, appSecret:String, udid:String) {
+		public function Carrot(appId:String, appSecret:String, udid:String, versionId:String = "unknown") {
 			if(appId === null) {
 				throw new Error("appId must not be null");
 			}
@@ -72,6 +73,7 @@ package com.carrot
 			_appSecret = appSecret;
 			_udid = udid;
 			_status = UNKNOWN;
+			_appVersion = versionId;
 
 			// Perform services discovery
 			if(!performServicesDiscovery()) {
@@ -101,6 +103,7 @@ package com.carrot
 				access_token: accessTokenOrFacebookId,
 				api_key: _udid
 			}
+			addCommonPayloadFields(params);
 			return httpRequest(_authHostname, URLRequestMethod.POST, "/games/" + _appId + "/users.json", params, null, function(event:HTTPStatusEvent):void {
 				switch(event.status) {
 					case 201: _status = AUTHORIZED; break;
@@ -177,11 +180,16 @@ package com.carrot
 		/* Private methods */
 
 		private function performServicesDiscovery():Boolean {
+			var params:Object = {
+				game_id: _appId,
+				_method: "GET"
+			};
+			addCommonPayloadFields(params);
+
 			var loader:MultipartURLLoader = new MultipartURLLoader();
-			loader.addVariable("sdk_version", SDKVersion);
-			loader.addVariable("sdk_platform", Capabilities.os.replace(" ", "_").toLowerCase());
-			loader.addVariable("game_id", _appId);
-			loader.addVariable("_method", "GET");
+			for(var k:String in params) {
+				loader.addVariable(k, params[k]);
+			}
 
 			loader.addEventListener(Event.COMPLETE, function(event:Event):void {
 				var services:Object = com.carrot.adobe.serialization.json.JSON.decode(event.target.loader.data.toString());
@@ -199,6 +207,13 @@ package com.carrot
 			}
 
 			return false;
+		}
+
+		private function addCommonPayloadFields(urlParams:Object):void {
+			urlParams["sdk_type"] = "flash";
+			urlParams["sdk_version"] = SDKVersion;
+			urlParams["sdk_platform"] = Capabilities.os.replace(" ", "_").toLowerCase();
+			urlParams["app_version"] = _appVersion;
 		}
 
 		private function postSignedRequest(endpoint:String, queryParams:Object, bitmapData:BitmapData, callback:Function, httpStatusCallback:Boolean = false):Boolean {
@@ -224,6 +239,8 @@ package com.carrot
 			for(var k:String in queryParams) {
 				urlParams[k] = queryParams[k];
 			}
+
+			addCommonPayloadFields(urlParams);
 
 			var pngBytes:ByteArray = null;
 			if(bitmapData !== null) {
@@ -306,6 +323,7 @@ package com.carrot
 		private var _appId:String;
 		private var _appSecret:String;
 		private var _status:String;
+		private var _appVersion:String;
 
 		private var _postHostname:String;
 		private var _authHostname:String;
