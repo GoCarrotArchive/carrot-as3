@@ -311,13 +311,15 @@ package com.carrot
 				}
 				else {
 					loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, function(event:HTTPStatusEvent):void {
-						var apiCallStatus:String = UNKNOWN;
-						switch(event.status) {
-							case 200:
-							case 201: _status = AUTHORIZED; apiCallStatus = OK; break;
-							case 401: apiCallStatus = _status = READ_ONLY; break;
-							case 403: apiCallStatus = _status = BAD_SECRET; break;
-							case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
+						var apiCallStatus:String = _status;
+						if(hostname !== _metricsHostname) {
+							switch(event.status) {
+								case 200:
+								case 201: _status = AUTHORIZED; apiCallStatus = OK; break;
+								case 401: apiCallStatus = _status = READ_ONLY; break;
+								case 403: apiCallStatus = _status = BAD_SECRET; break;
+								case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
+							}
 						}
 						if(method === URLRequestMethod.POST && callback !== null) {
 							callback(apiCallStatus);
