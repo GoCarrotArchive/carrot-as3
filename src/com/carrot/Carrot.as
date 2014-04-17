@@ -79,6 +79,8 @@ package com.carrot
 			if(!performServicesDiscovery()) {
 				trace("Could not perform services discovery. Carrot is offline.");
 			}
+
+			makeSignedRequest(_metricsHostname, "/app_opened.json", URLRequestMethod.POST, {}, null, null);
 		}
 
 		/**
