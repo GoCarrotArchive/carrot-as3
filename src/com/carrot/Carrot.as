@@ -177,6 +177,21 @@ package com.carrot
 			return postSignedRequest("/me/actions.json", params, bitmapData, callback);
 		}
 
+		/**
+		 * Inform Carrot about a purchase of premium currency for metrics tracking.
+
+		 * @param amount    The amount of real money spent.
+		 * @param currency  The type of real money spent (eg. USD).
+		 * @param callback  A function which will be called upon completion of the high score post.
+		 */
+		public function postPremiumCurrencyPurchase(amount:Number, currency:String, callback:Function = null):Boolean {
+			var params:Object = {
+				amount: amount,
+				currency: currency
+			};
+			return makeSignedRequest(_metricsHostname, "/purchase.json", URLRequestMethod.POST, params, null, callback);
+		}
+
 		/* Private methods */
 
 		private function performServicesDiscovery():Boolean {
