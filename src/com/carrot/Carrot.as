@@ -17,6 +17,7 @@ package com.carrot
 {
 	import com.carrot.adobe.crypto.*;
 	import com.carrot.adobe.serialization.json.JSON;
+	import flash.external.ExternalInterface;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
@@ -50,6 +51,13 @@ package com.carrot
 
 		public static const SDKVersion:String = "1.1";
 
+		private static const JS_SDK_LOAD:XML =
+			<script>
+				<![CDATA[
+					function(){if(!window.teak){window.teak=window.teak||[];window.teak.methods=["init","setUdid","internal_directFeedPost","identify","postAction","postAchievement","postHighScore","canMakeFeedPost","popupFeedPost","reportNotificationClick","reportFeedClick","sendRequest","acceptRequest"];window.teak.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);window.teak.push(t);return window.teak}};for(var e=0;e<window.teak.methods.length;e++){var t=window.teak.methods[e];window.teak[t]=window.teak.factory(t)}var n=document.createElement("script");n.type="text/javascript";n.async=true;n.src="//d2h7sc2qwu171k.cloudfront.net/teak.min.js";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(n,r)}}
+				]]>
+			</script>;
+
 		/**
 		 * Create a new Carrot instance.
 		 *
@@ -75,12 +83,23 @@ package com.carrot
 			_status = UNKNOWN;
 			_appVersion = versionId;
 
+			// Defaults
+			_postHostname = "gocarrot.com";
+			_metricsHostname = "parsnip.gocarrot.com";
+			_authHostname = "gocarrot.com";
+
 			// Perform services discovery
 			if(!performServicesDiscovery()) {
 				trace("Could not perform services discovery. Carrot is offline.");
 			}
 
-			makeSignedRequest(_metricsHostname, "/app_opened.json", URLRequestMethod.POST, {}, null, null);
+			try {
+				if(ExternalInterface.available) {
+					ExternalInterface.call(JS_SDK_LOAD);
+					ExternalInterface.call("window.teak.init", _appId, _appSecret);
+					ExternalInterface.call("window.teak.setUdid", _udid);
+				}
+			} catch(error:Error) {}
 		}
 
 		/**
@@ -177,6 +196,16 @@ package com.carrot
 				params.object_instance_id = objectInstanceId;
 			}
 			return postSignedRequest("/me/actions.json", params, bitmapData, callback);
+		}
+
+		public function popupFeedPost(objectInstanceId:String, objectProperties:Object):Boolean {
+			try {
+				if(ExternalInterface.available) {
+					ExternalInterface.call("window.teak.popupFeedPost", objectInstanceId, objectProperties);
+					return true;
+				}
+			} catch(error:Error) {}
+			return false;
 		}
 
 		/**
@@ -327,6 +356,17 @@ package com.carrot
 					});
 				}
 			}
+
+			loader.addEventListener(Event.COMPLETE, function(event:Event):void {
+				var data:Object = com.carrot.adobe.serialization.json.JSON.decode(loader.loader.data);
+				if(data.cascade && data.cascade.method == "feedpost") {
+					if(ExternalInterface.available) {
+						try {
+							ExternalInterface.call("window.teak.internal_directFeedPost", data.cascade.arguments);
+						} catch(error:Error) {}
+					}
+				}
+			});
 
 			try {
 				loader.load("https://" + hostname + endpoint);
