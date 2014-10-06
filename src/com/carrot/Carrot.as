@@ -211,15 +211,19 @@ package com.carrot
 			return postSignedRequest("/me/actions.json", params, bitmapData, callback);
 		}
 
+		private function generateJSCallback(callback:Function):String {
+			var callbackId:String = null;
+			if(callback != null) {
+				callbackId = new Uuid().toString();
+				_openUICalls[callbackId] = callback;
+			}
+			return callbackId;
+		}
+
 		public function popupFeedPost(objectInstanceId:String, objectProperties:Object, callback:Function = null):Boolean {
 			try {
 				if(ExternalInterface.available) {
-					var callbackId:String = null;
-					if(callback != null) {
-						callbackId = new Uuid().toString();
-						_openUICalls[callbackId] = callback;
-					}
-					ExternalInterface.call("window.teak.popupFeedPost", objectInstanceId, objectProperties, callbackId);
+					ExternalInterface.call("window.teak.popupFeedPost", objectInstanceId, objectProperties, generateJSCallback(callback));
 					return true;
 				}
 			} catch(error:Error) {}
@@ -229,12 +233,7 @@ package com.carrot
 		public function sendRequest(requestId:String, options:Object, callback:Function = null):Boolean {
 			try{
 				if(ExternalInterface.available) {
-					var callbackId:String = null;
-					if(callback != null) {
-						callbackId = new Uuid().toString();
-						_openUICalls[callbackId] = callback;
-					}
-					ExternalInterface.call("window.teak.sendRequest", requestId, options, callbackId);
+					ExternalInterface.call("window.teak.sendRequest", requestId, options, generateJSCallback(callback));
 					return true;
 				}
 			} catch(error:Error) {}
@@ -357,6 +356,22 @@ package com.carrot
 			}
 
 			var loader:MultipartURLLoader = new MultipartURLLoader();
+			var httpStatus:int = 0;
+			var internalHttpStatusCallback:Function = function():void {
+				var apiCallStatus:String = _status;
+				if(hostname !== _metricsHostname) {
+					switch(httpStatus) {
+						case 200:
+						case 201: _status = AUTHORIZED; apiCallStatus = OK; break;
+						case 401: apiCallStatus = _status = READ_ONLY; break;
+						case 403: apiCallStatus = _status = BAD_SECRET; break;
+						case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
+					}
+				}
+				if(method === URLRequestMethod.POST && callback !== null) {
+					callback(apiCallStatus);
+				}
+			}
 			if(urlParams !== null) {
 				for(var k:String in urlParams) {
 					loader.addVariable(k, urlParams[k]);
@@ -373,19 +388,7 @@ package com.carrot
 				}
 				else {
 					loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, function(event:HTTPStatusEvent):void {
-						var apiCallStatus:String = _status;
-						if(hostname !== _metricsHostname) {
-							switch(event.status) {
-								case 200:
-								case 201: _status = AUTHORIZED; apiCallStatus = OK; break;
-								case 401: apiCallStatus = _status = READ_ONLY; break;
-								case 403: apiCallStatus = _status = BAD_SECRET; break;
-								case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
-							}
-						}
-						if(method === URLRequestMethod.POST && callback !== null) {
-							callback(apiCallStatus);
-						}
+						httpStatus = event.status;
 					});
 				}
 			}
@@ -395,17 +398,19 @@ package com.carrot
 				if(data.cascade && data.cascade.method == "feedpost") {
 					if(ExternalInterface.available) {
 						try {
-							ExternalInterface.call("window.teak.internal_directFeedPost", data.cascade.arguments);
+							ExternalInterface.call("window.teak.internal_directFeedPost", data.cascade.arguments, generateJSCallback(callback));
 						} catch(error:Error) {}
 					}
 				} else if(data.cascade && data.cascade.method == "request") {
 					if(ExternalInterface.available) {
 						try {
-							ExternalInterface.call("window.teak.internal_directRequest", data.cascade.arguments);
+							ExternalInterface.call("window.teak.internal_directRequest", data.cascade.arguments, generateJSCallback(callback));
 						} catch(error:Error) {}
 					}
 				} else if(data.cascade && data.cascade.method == "sendRequest") {
 					sendRequest(data.cascade.arguments.request_id, data.cascade.arguments.object_properties);
+				} else {
+					internalHttpStatusCallback();
 				}
 			});
 
