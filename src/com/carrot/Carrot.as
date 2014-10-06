@@ -208,6 +208,16 @@ package com.carrot
 			return false;
 		}
 
+		public function sendRequest(requestId:String, options:Object):Boolean {
+			try{
+				if(ExternalInterface.available) {
+					ExternalInterface.call("window.teak.sendRequest", requestId, options);
+					return true;
+				}
+			} catch(error:Error) {}
+			return false;
+		}
+
 		/**
 		 * Inform Carrot about a purchase of premium currency for metrics tracking.
 
