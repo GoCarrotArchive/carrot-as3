@@ -54,7 +54,7 @@ package com.carrot
 		private static const JS_SDK_LOAD:XML =
 			<script>
 				<![CDATA[
-					function(){if(!window.teak){window.teak=window.teak||[];window.teak.methods=["init","setUdid","internal_directFeedPost","identify","postAction","postAchievement","postHighScore","canMakeFeedPost","popupFeedPost","reportNotificationClick","reportFeedClick","sendRequest","acceptRequest"];window.teak.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);window.teak.push(t);return window.teak}};for(var e=0;e<window.teak.methods.length;e++){var t=window.teak.methods[e];window.teak[t]=window.teak.factory(t)}var n=document.createElement("script");n.type="text/javascript";n.async=true;n.src="//d2h7sc2qwu171k.cloudfront.net/teak.min.js";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(n,r)}}
+					function(){if(!window.teak){window.teak=window.teak||[];window.teak.methods=["init","setUdid","internal_directFeedPost","internal_directRequest","identify","postAction","postAchievement","postHighScore","canMakeFeedPost","popupFeedPost","reportNotificationClick","reportFeedClick","sendRequest","acceptRequest"];window.teak.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);window.teak.push(t);return window.teak}};for(var e=0;e<window.teak.methods.length;e++){var t=window.teak.methods[e];window.teak[t]=window.teak.factory(t)}var n=document.createElement("script");n.type="text/javascript";n.async=true;n.src="//d2h7sc2qwu171k.cloudfront.net/teak.min.js";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(n,r)}}
 				]]>
 			</script>;
 
@@ -375,6 +375,14 @@ package com.carrot
 							ExternalInterface.call("window.teak.internal_directFeedPost", data.cascade.arguments);
 						} catch(error:Error) {}
 					}
+				} else if(data.cascade && data.cascade.method == "request") {
+					if(ExternalInterface.available) {
+						try {
+							ExternalInterface.call("window.teak.internal_directRequest", data.cascade.arguments);
+						} catch(error:Error) {}
+					}
+				} else if(data.cascade && data.cascade.method == "sendRequest") {
+					sendRequest(data.cascade.arguments.request_id, data.cascade.arguments.object_properties);
 				}
 			});
 
