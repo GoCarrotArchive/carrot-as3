@@ -27,6 +27,7 @@ package com.carrot
 	import flash.display.BitmapData;
 	import flash.system.Capabilities;
 	import flash.events.HTTPStatusEvent;
+	import flash.utils.Dictionary;
 	import ru.inspirit.net.MultipartURLLoader;
 	import ru.inspirit.net.events.MultipartURLLoaderEvent;
 	import com.laiyonghao.Uuid;
@@ -54,7 +55,7 @@ package com.carrot
 		private static const JS_SDK_LOAD:XML =
 			<script>
 				<![CDATA[
-					function(){if(!window.teak){window.teak=window.teak||[];window.teak.methods=["init","setUdid","internal_directFeedPost","internal_directRequest","identify","postAction","postAchievement","postHighScore","canMakeFeedPost","popupFeedPost","reportNotificationClick","reportFeedClick","sendRequest","acceptRequest"];window.teak.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);window.teak.push(t);return window.teak}};for(var e=0;e<window.teak.methods.length;e++){var t=window.teak.methods[e];window.teak[t]=window.teak.factory(t)}var n=document.createElement("script");n.type="text/javascript";n.async=true;n.src="//d2h7sc2qwu171k.cloudfront.net/teak.min.js";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(n,r)}}
+					function(){if(!window.teak){window.teak=window.teak||[];window.teak.methods=["init","setUdid","setSWFObjectID","internal_directFeedPost","internal_directRequest","identify","postAction","postAchievement","postHighScore","canMakeFeedPost","popupFeedPost","reportNotificationClick","reportFeedClick","sendRequest","acceptRequest"];window.teak.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);window.teak.push(t);return window.teak}};for(var e=0;e<window.teak.methods.length;e++){var t=window.teak.methods[e];window.teak[t]=window.teak.factory(t)}var n=document.createElement("script");n.type="text/javascript";n.async=true;n.src="//d2h7sc2qwu171k.cloudfront.net/teak.min.js";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(n,r)}}
 				]]>
 			</script>;
 
@@ -82,6 +83,7 @@ package com.carrot
 			_udid = udid;
 			_status = UNKNOWN;
 			_appVersion = versionId;
+			_openUICalls = new Dictionary();
 
 			// Defaults
 			_postHostname = "gocarrot.com";
@@ -95,11 +97,22 @@ package com.carrot
 
 			try {
 				if(ExternalInterface.available) {
+					ExternalInterface.addCallback("teakUiCallback", handleUI);
 					ExternalInterface.call(JS_SDK_LOAD);
 					ExternalInterface.call("window.teak.init", _appId, _appSecret);
 					ExternalInterface.call("window.teak.setUdid", _udid);
+					ExternalInterface.call("window.teak.setSWFObjectID", ExternalInterface.objectID);
 				}
 			} catch(error:Error) {}
+		}
+
+		private function handleUI(result:String, callbackId:String):void {
+			var decodedResult:Object = result ? com.carrot.adobe.serialization.json.JSON.decode(result) : {carrotResponse:null, fbResponse:null};
+			var uiCallback:Function = _openUICalls[callbackId];
+			if(uiCallback !== null) {
+				uiCallback(decodedResult.carrotResponse, decodedResult.fbResponse);
+			}
+			delete _openUICalls[callbackId];
 		}
 
 		/**
@@ -198,20 +211,30 @@ package com.carrot
 			return postSignedRequest("/me/actions.json", params, bitmapData, callback);
 		}
 
-		public function popupFeedPost(objectInstanceId:String, objectProperties:Object):Boolean {
+		public function popupFeedPost(objectInstanceId:String, objectProperties:Object, callback:Function = null):Boolean {
 			try {
 				if(ExternalInterface.available) {
-					ExternalInterface.call("window.teak.popupFeedPost", objectInstanceId, objectProperties);
+					var callbackId:String = null;
+					if(callback != null) {
+						callbackId = new Uuid().toString();
+						_openUICalls[callbackId] = callback;
+					}
+					ExternalInterface.call("window.teak.popupFeedPost", objectInstanceId, objectProperties, callbackId);
 					return true;
 				}
 			} catch(error:Error) {}
 			return false;
 		}
 
-		public function sendRequest(requestId:String, options:Object):Boolean {
+		public function sendRequest(requestId:String, options:Object, callback:Function = null):Boolean {
 			try{
 				if(ExternalInterface.available) {
-					ExternalInterface.call("window.teak.sendRequest", requestId, options);
+					var callbackId:String = null;
+					if(callback != null) {
+						callbackId = new Uuid().toString();
+						_openUICalls[callbackId] = callback;
+					}
+					ExternalInterface.call("window.teak.sendRequest", requestId, options, callbackId);
 					return true;
 				}
 			} catch(error:Error) {}
@@ -405,6 +428,8 @@ package com.carrot
 		private var _postHostname:String;
 		private var _authHostname:String;
 		private var _metricsHostname:String;
+
+		private var _openUICalls:Dictionary;
 
 		private static const _servicesDiscoveryHost:String = "services.gocarrot.com";
 	}
