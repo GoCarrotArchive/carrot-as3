@@ -50,7 +50,7 @@ package com.carrot
 		public static const ERROR:String = "Operation unsuccessful.";
 		public static const BAD_SECRET:String = "Operation unsuccessful (bad Carrot secret).";
 
-		public static const SDKVersion:String = "1.1";
+		public static const SDKVersion:String = "1.2";
 
 		private static const JS_SDK_LOAD:XML =
 			<script>
