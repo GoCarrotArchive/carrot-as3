@@ -90,6 +90,14 @@ package com.carrot
 			_metricsHostname = "parsnip.gocarrot.com";
 			_authHostname = "gocarrot.com";
 
+			// GoViral Facebook ANE
+			try {
+				_gv = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GoViral") as Class;
+				_gvFacebookDispatcher = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GVFacebookDispatcher") as Class;
+				_gvFacebookEvent  = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GVFacebookEvent") as Class;
+			}
+			catch(error:Error) {}
+
 			// Perform services discovery
 			if(!performServicesDiscovery()) {
 				trace("Could not perform services discovery. Carrot is offline.");
@@ -227,6 +235,47 @@ package com.carrot
 					return true;
 				}
 			} catch(error:Error) {}
+
+			if(_gv !== null) {
+				if(objectInstanceId === null) {
+					throw new Error("objectInstanceId may not be null");
+				}
+				else if(objectProperties === null) {
+					throw new Error("objectProperties must not be null");
+				}
+				// TODO: Can objectProperties be null? What about objectInstanceId
+				var params:Object = {
+					object_properties: com.carrot.adobe.serialization.json.JSON.encode(objectProperties === null ? {} : objectProperties)
+				}
+				if(objectInstanceId !== null) {
+					params.object_instance_id = objectInstanceId;
+				}
+				try {
+					postSignedRequest("/me/feed_post.json", params, null, function(event:HTTPStatusEvent):void {
+						event.target.addEventListener(Event.COMPLETE, function(event:Event):void {
+							var data:Object = com.carrot.adobe.serialization.json.JSON.decode(loader.loader.data);
+							if(data.code === 200) {
+								var dispatcher:Object = _gv["showFacebookFeedDialog"].call(_gv["goViral"], "feed", {
+									data.fb_data.name,
+									data.fb_data.caption,
+									"",
+									data.fb_data.description,
+									data.fb_data.link,
+									data.fb_data.picture,
+									{ref: data.fb_data.ref || ""});
+
+									_gvFacebookDispatcher["addRequestListener"].call(dispatcher, function(event:Event) {
+										if(event.type === _gvFacebookEvent["FB_DIALOG_FINISHED"]) {
+											httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {}, null);
+										}
+									});
+								}
+							}
+						});
+					}, true);
+					return true;
+				} catch(error:Error) {}
+			}
 			return false;
 		}
 
@@ -461,6 +510,10 @@ package com.carrot
 		private var _metricsHostname:String;
 
 		private var _openUICalls:Dictionary;
+
+		private var _gv:Class;
+		private var _gvFacebookDispatcher:Class;
+		private var _gvFacebookEvent:Class;
 
 		private static const _servicesDiscoveryHost:String = "services.gocarrot.com";
 	}
