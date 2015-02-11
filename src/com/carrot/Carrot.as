@@ -241,6 +241,30 @@ package com.carrot
 		}
 
 		/**
+		 * Tell Carrot to track an arbitrary event.
+		 *
+		 * @param evenType    The type of event you are tracking.
+		 * @param eventValue   The value of the event you are tracking.
+		 * @param eventContext Optional additional context for the event.
+		 */
+		public function trackEvent(evenType:String, eventValue:String, eventContext:String = ""):Boolean {
+			if(evenType === null) {
+				throw new Error("evenType must not be null");
+			}
+			if(eventValue === null) {
+				throw new Error("eventValue must not be null");
+			}
+
+			var params:Object = {
+				action_type: evenType,
+				object_type: eventValue,
+				object_instance_id: eventContext
+			}
+
+			return postSignedRequest("/me/events", params, null, null);
+		}
+
+		/**
 		 * Inform Carrot about a purchase of premium currency for metrics tracking.
 
 		 * @param amount    The amount of real money spent.
