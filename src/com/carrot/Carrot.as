@@ -253,24 +253,8 @@ package com.carrot
 				try {
 					postSignedRequest("/me/feed_post.json", params, null, function(event:HTTPStatusEvent):void {
 						event.target.addEventListener(Event.COMPLETE, function(event:Event):void {
-							var data:Object = com.carrot.adobe.serialization.json.JSON.decode(loader.loader.data);
-							if(data.code === 200) {
-								var dispatcher:Object = _gv["showFacebookFeedDialog"].call(_gv["goViral"], "feed", {
-									data.fb_data.name,
-									data.fb_data.caption,
-									"",
-									data.fb_data.description,
-									data.fb_data.link,
-									data.fb_data.picture,
-									{ref: data.fb_data.ref || ""});
-
-									_gvFacebookDispatcher["addRequestListener"].call(dispatcher, function(event:Event) {
-										if(event.type === _gvFacebookEvent["FB_DIALOG_FINISHED"]) {
-											httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {}, null);
-										}
-									});
-								}
-							}
+							var data:Object = com.carrot.adobe.serialization.json.JSON.decode(event.target.loader.data);
+							nativePopupFeedPost(data, callback);
 						});
 					}, true);
 					return true;
@@ -329,6 +313,33 @@ package com.carrot
 		}
 
 		/* Private methods */
+
+		private function nativePopupFeedPost(data:Object, callback:Function = null):void {
+			if(_gv !== null) {
+				try {
+					if(data.code === 200) {
+						var dispatcher:Object = _gv["showFacebookFeedDialog"].call(_gv["goViral"],
+							data.fb_data.name,
+							data.fb_data.caption,
+							"",
+							data.fb_data.description,
+							data.fb_data.link,
+							data.fb_data.picture,
+							{ref: data.fb_data.ref || ""});
+
+						_gvFacebookDispatcher["addRequestListener"].call(dispatcher, function(event:Event) {
+							if(event.type === _gvFacebookEvent["FB_DIALOG_FINISHED"]) {
+								httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {}, null, null);
+							}
+							callback(data, event["data"]);
+						});
+					}
+					else {
+						callback(data);
+					}
+				} catch(error:Error) {}
+			}
+		}
 
 		private function performServicesDiscovery():Boolean {
 			var params:Object = {
@@ -475,6 +486,9 @@ package com.carrot
 						try {
 							ExternalInterface.call("window.teak.internal_directFeedPost", data.cascade.arguments, generateJSCallback(callback));
 						} catch(error:Error) {}
+					}
+					else if(_gv !== null) {
+						nativePopupFeedPost(data.cascade.arguments, callback);
 					}
 				} else if(data.cascade && data.cascade.method == "request") {
 					if(ExternalInterface.available) {
