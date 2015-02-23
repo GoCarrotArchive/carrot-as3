@@ -346,10 +346,12 @@ package com.carrot
 
 			var pngBytes:ByteArray = null;
 			if(bitmapData !== null) {
+				/*
 				pngBytes = PNGEncoder2.encode(bitmapData);
 				var object_properties:Object = com.carrot.adobe.serialization.json.JSON.decode(urlParams.object_properties);
 				object_properties.image_sha = SHA256.hashBytes(pngBytes);
 				urlParams.object_properties = com.carrot.adobe.serialization.json.JSON.encode(object_properties);
+				*/
 			}
 
 			var urlParamKeys:Array = [];
@@ -392,7 +394,7 @@ package com.carrot
 						case 405: apiCallStatus = _status = NOT_AUTHORIZED; break;
 					}
 				}
-				if(method === URLRequestMethod.POST && callback !== null) {
+				if(method === URLRequestMethod.POST && callback !== null && !httpStatusCallback) {
 					callback(apiCallStatus);
 				}
 			}
