@@ -336,6 +336,27 @@ package com.carrot
 			return makeSignedRequest(_metricsHostname, "/purchase.json", URLRequestMethod.POST, params, null, callback);
 		}
 
+		public function reportFeedClick(arguments:Array):void {
+			var args:Array = arguments[0].split("#")[1].split("&");
+			for(var i:uint in args) {
+				var arg:Array = args[i].split("=");
+				if(arg[0] === "target_url") {
+					var params:Array = unescape(arg[1]).split("?")[1].split("&");
+					for(var j:uint in params) {
+						var param:Array = params[j].split("=");
+						if(param[0] === "teak_post_id") {
+							httpRequest("posts.gocarrot.com", URLRequestMethod.POST, "/" + param[1] + "/clicks", {
+								clicking_user_id: _udid,
+								no_status_code: true
+							}, null, null);
+							break;
+						}
+					}
+					break;
+				}
+			}
+		}
+
 		/* Private methods */
 
 		private function nativePopupFeedPost(data:Object, callback:Function = null):void {
