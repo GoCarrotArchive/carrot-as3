@@ -90,6 +90,18 @@ package com.carrot
 			_metricsHostname = "parsnip.gocarrot.com";
 			_authHostname = "gocarrot.com";
 
+			// GoViral Facebook ANE
+			try {
+				_gv = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GoViral") as Class;
+				_gvFacebookDispatcher = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GVFacebookDispatcher") as Class;
+				_gvFacebookEvent  = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.events.GVFacebookEvent") as Class;
+			}
+			catch(error:Error) {}
+
+			if(!ExternalInterface.available && (_gv === null || _gvFacebookDispatcher === null || _gvFacebookEvent === null)) {
+				trace("ExternalInterface not available and GoViral ANE not found.");
+			}
+
 			// Perform services discovery
 			if(!performServicesDiscovery()) {
 				trace("Could not perform services discovery. Carrot is offline.");
@@ -227,6 +239,46 @@ package com.carrot
 					return true;
 				}
 			} catch(error:Error) {}
+
+			if(_gv !== null) {
+				if(objectInstanceId === null) {
+					throw new Error("objectInstanceId may not be null");
+				}
+
+				var params:Object = {
+					object_instance_id: objectInstanceId,
+					object_properties: com.carrot.adobe.serialization.json.JSON.encode(objectProperties === null ? {} : objectProperties)
+				};
+
+				try {
+					postSignedRequest("/me/feed_post.json", params, null, function(event:HTTPStatusEvent):void {
+						event.target.addEventListener(Event.COMPLETE, function(event:Event):void {
+							trace(event.target.loader.data);
+							var data:Object = com.carrot.adobe.serialization.json.JSON.decode(event.target.loader.data);
+
+							if(data.autoshare) {
+								var dispatcher:Object = _gv["goViral"]["facebookGraphRequest"].call(_gv["goViral"],
+									"me/feed", "POST", data.fb_data, "publish_actions");
+								dispatcher["addRequestListener"].call(dispatcher, function(event:Event):void {
+									if(event.type === _gvFacebookEvent["FB_REQUEST_RESPONSE"] && event["data"]["postId"]) {
+										httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {
+											platform_id: data.post_id,
+											placement_id: event["data"]["postId"]
+										}, null, null);
+									}
+									else if(data.dialog_fallback) {
+										nativePopupFeedPost(data, callback);
+									}
+								});
+							}
+							else {
+								nativePopupFeedPost(data, callback);
+							}
+						});
+					}, true);
+					return true;
+				} catch(error:Error) {}
+			}
 			return false;
 		}
 
@@ -280,6 +332,37 @@ package com.carrot
 		}
 
 		/* Private methods */
+
+		private function nativePopupFeedPost(data:Object, callback:Function = null):void {
+			if(_gv !== null) {
+				try {
+					if(data.code === 200) {
+						var dispatcher:Object = _gv["goViral"]["showFacebookShareDialog"].call(_gv["goViral"],
+							data.fb_data.name,
+							data.fb_data.caption,
+							data.fb_data.description,
+							data.fb_data.link,
+							data.fb_data.picture,
+							data.fb_data.ref === null ? null : {ref: data.fb_data.ref});
+
+						dispatcher["addDialogListener"].call(dispatcher, function(event:Event):void {
+							if(event.type === _gvFacebookEvent["FB_DIALOG_FINISHED"]) {
+								httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {
+									platform_id: data.post_id,
+									placement_id: event["data"]["postId"]
+								}, null, null);
+							}
+							if(callback !== null) callback(data, event["data"]);
+						});
+					}
+					else {
+						if(callback !== null) callback(data);
+					}
+				} catch(error:Error) {
+					trace("GoViral::showFacebookShareDialog() error: " + error);
+				}
+			}
+		}
 
 		private function performServicesDiscovery():Boolean {
 			var params:Object = {
@@ -427,6 +510,9 @@ package com.carrot
 							ExternalInterface.call("window.teak.internal_directFeedPost", data.cascade.arguments, generateJSCallback(callback));
 						} catch(error:Error) {}
 					}
+					else if(_gv !== null) {
+						nativePopupFeedPost(data.cascade.arguments, callback);
+					}
 				} else if(data.cascade && data.cascade.method == "request") {
 					if(ExternalInterface.available) {
 						try {
@@ -461,6 +547,10 @@ package com.carrot
 		private var _metricsHostname:String;
 
 		private var _openUICalls:Dictionary;
+
+		private var _gv:Class;
+		private var _gvFacebookDispatcher:Class;
+		private var _gvFacebookEvent:Class;
 
 		private static const _servicesDiscoveryHost:String = "services.gocarrot.com";
 	}
