@@ -109,13 +109,19 @@ package com.carrot
 
 			try {
 				if(ExternalInterface.available) {
+					_httpStatusEvent = HTTPStatusEvent.HTTP_STATUS;
 					ExternalInterface.addCallback("teakUiCallback", handleUI);
 					ExternalInterface.call(JS_SDK_LOAD);
 					ExternalInterface.call("window.teak.init", _appId, _appSecret);
 					ExternalInterface.call("window.teak.setUdid", _udid);
 					ExternalInterface.call("window.teak.setSWFObjectID", ExternalInterface.objectID);
 				}
-			} catch(error:Error) {}
+				else {
+					_httpStatusEvent = HTTPStatusEvent.HTTP_RESPONSE_STATUS;
+				}
+			} catch(error:Error) {
+				_httpStatusEvent = HTTPStatusEvent.HTTP_RESPONSE_STATUS;
+			}
 		}
 
 		private function handleUI(result:String, callbackId:String):void {
@@ -253,7 +259,6 @@ package com.carrot
 				try {
 					postSignedRequest("/me/feed_post.json", params, null, function(event:HTTPStatusEvent):void {
 						event.target.addEventListener(Event.COMPLETE, function(event:Event):void {
-							trace(event.target.loader.data);
 							var data:Object = com.carrot.adobe.serialization.json.JSON.decode(event.target.loader.data);
 
 							if(data.autoshare) {
@@ -493,10 +498,10 @@ package com.carrot
 
 			if(callback !== null) {
 				if(httpStatusCallback) {
-					loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, callback);
+					loader.addEventListener(_httpStatusEvent, callback);
 				}
 				else {
-					loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, function(event:HTTPStatusEvent):void {
+					loader.addEventListener(_httpStatusEvent, function(event:HTTPStatusEvent):void {
 						httpStatus = event.status;
 					});
 				}
@@ -551,6 +556,8 @@ package com.carrot
 		private var _gv:Class;
 		private var _gvFacebookDispatcher:Class;
 		private var _gvFacebookEvent:Class;
+
+		private var _httpStatusEvent:String;
 
 		private static const _servicesDiscoveryHost:String = "services.gocarrot.com";
 	}
