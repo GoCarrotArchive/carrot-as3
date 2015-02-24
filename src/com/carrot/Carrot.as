@@ -94,9 +94,13 @@ package com.carrot
 			try {
 				_gv = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GoViral") as Class;
 				_gvFacebookDispatcher = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GVFacebookDispatcher") as Class;
-				_gvFacebookEvent  = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.GVFacebookEvent") as Class;
+				_gvFacebookEvent  = flash.utils.getDefinitionByName("com.milkmangames.nativeextensions.events.GVFacebookEvent") as Class;
 			}
 			catch(error:Error) {}
+
+			if(!ExternalInterface.available && (_gv === null || _gvFacebookDispatcher === null || _gvFacebookEvent === null)) {
+				trace("ExternalInterface not available and GoViral ANE not found.");
+			}
 
 			// Perform services discovery
 			if(!performServicesDiscovery()) {
@@ -240,21 +244,36 @@ package com.carrot
 				if(objectInstanceId === null) {
 					throw new Error("objectInstanceId may not be null");
 				}
-				else if(objectProperties === null) {
-					throw new Error("objectProperties must not be null");
-				}
-				// TODO: Can objectProperties be null? What about objectInstanceId
+
 				var params:Object = {
+					object_instance_id: objectInstanceId,
 					object_properties: com.carrot.adobe.serialization.json.JSON.encode(objectProperties === null ? {} : objectProperties)
-				}
-				if(objectInstanceId !== null) {
-					params.object_instance_id = objectInstanceId;
-				}
+				};
+
 				try {
 					postSignedRequest("/me/feed_post.json", params, null, function(event:HTTPStatusEvent):void {
 						event.target.addEventListener(Event.COMPLETE, function(event:Event):void {
+							trace(event.target.loader.data);
 							var data:Object = com.carrot.adobe.serialization.json.JSON.decode(event.target.loader.data);
-							nativePopupFeedPost(data, callback);
+
+							if(data.autoshare) {
+								var dispatcher:Object = _gv["goViral"]["facebookGraphRequest"].call(_gv["goViral"],
+									"me/feed", "POST", data.fb_data, "publish_actions");
+								dispatcher["addRequestListener"].call(dispatcher, function(event:Event):void {
+									if(event.type === _gvFacebookEvent["FB_REQUEST_RESPONSE"] && event["data"]["postId"]) {
+										httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {
+											platform_id: data.post_id,
+											placement_id: event["data"]["postId"]
+										}, null, null);
+									}
+									else if(data.dialog_fallback) {
+										nativePopupFeedPost(data, callback);
+									}
+								});
+							}
+							else {
+								nativePopupFeedPost(data, callback);
+							}
 						});
 					}, true);
 					return true;
@@ -318,26 +337,30 @@ package com.carrot
 			if(_gv !== null) {
 				try {
 					if(data.code === 200) {
-						var dispatcher:Object = _gv["showFacebookFeedDialog"].call(_gv["goViral"],
+						var dispatcher:Object = _gv["goViral"]["showFacebookShareDialog"].call(_gv["goViral"],
 							data.fb_data.name,
 							data.fb_data.caption,
-							"",
 							data.fb_data.description,
 							data.fb_data.link,
 							data.fb_data.picture,
-							{ref: data.fb_data.ref || ""});
+							data.fb_data.ref === null ? null : {ref: data.fb_data.ref});
 
-						_gvFacebookDispatcher["addRequestListener"].call(dispatcher, function(event:Event) {
+						dispatcher["addDialogListener"].call(dispatcher, function(event:Event):void {
 							if(event.type === _gvFacebookEvent["FB_DIALOG_FINISHED"]) {
-								httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {}, null, null);
+								httpRequest("parsnip.gocarrot.com", URLRequestMethod.POST, "/feed_dialog_post", {
+									platform_id: data.post_id,
+									placement_id: event["data"]["postId"]
+								}, null, null);
 							}
-							callback(data, event["data"]);
+							if(callback !== null) callback(data, event["data"]);
 						});
 					}
 					else {
-						callback(data);
+						if(callback !== null) callback(data);
 					}
-				} catch(error:Error) {}
+				} catch(error:Error) {
+					trace("GoViral::showFacebookShareDialog() error: " + error);
+				}
 			}
 		}
 
