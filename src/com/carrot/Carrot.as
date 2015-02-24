@@ -336,7 +336,7 @@ package com.carrot
 			return makeSignedRequest(_metricsHostname, "/purchase.json", URLRequestMethod.POST, params, null, callback);
 		}
 
-		public function reportFeedClick(arguments:Array):void {
+		public function reportNativeInvokeEvent(arguments:Array):void {
 			var args:Array = arguments[0].split("#")[1].split("&");
 			for(var i:uint in args) {
 				var arg:Array = args[i].split("=");
