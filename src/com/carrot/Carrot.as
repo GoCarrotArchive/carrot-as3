@@ -336,6 +336,7 @@ package com.carrot
 			return makeSignedRequest(_metricsHostname, "/purchase.json", URLRequestMethod.POST, params, null, callback);
 		}
 
+CONFIG::AirNative {
 		public function reportNativeInvokeEvent(arguments:Array):void {
 			var args:Array = arguments[0].split("#")[1].split("&");
 			for(var i:uint in args) {
@@ -356,7 +357,7 @@ package com.carrot
 				}
 			}
 		}
-
+}
 		/* Private methods */
 
 		private function nativePopupFeedPost(data:Object, callback:Function = null):void {
@@ -454,15 +455,15 @@ package com.carrot
 			addCommonPayloadFields(urlParams);
 
 			var pngBytes:ByteArray = null;
+
+CONFIG::NotAirNative {
 			if(bitmapData !== null) {
-				/*
 				pngBytes = PNGEncoder2.encode(bitmapData);
 				var object_properties:Object = com.carrot.adobe.serialization.json.JSON.decode(urlParams.object_properties);
 				object_properties.image_sha = SHA256.hashBytes(pngBytes);
 				urlParams.object_properties = com.carrot.adobe.serialization.json.JSON.encode(object_properties);
-				*/
 			}
-
+}
 			var urlParamKeys:Array = [];
 			for(k in urlParams) {
 				urlParamKeys.push(k);

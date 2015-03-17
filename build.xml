@@ -9,6 +9,8 @@
         <compc 
             output="${DEPLOY_DIR}/Carrot.swc"
             include-classes="com.carrot.Carrot">
+            <compiler.define name="CONFIG::AirNative" value="false" />
+            <compiler.define name="CONFIG::NotAirNative" value="true" />
             <compiler.include-libraries dir="${basedir}/libs" append="true">
                 <include name="PNGEncoder2_normal.swc"/>
             </compiler.include-libraries>
