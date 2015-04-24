@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Carrot" basedir=".">
     <property environment="env"/>
+    <property name="SDK_VERSION" value="1.3.0" />
     <property name="FLEX_HOME" value="${env.FLEX_HOME}" />
     <taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" />
     <property name="DEPLOY_DIR" value="${basedir}/build"/>
     <property name="DOCS_DIR" value="${basedir}/docs"/>
     <target name="compile">
         <compc 
-            output="${DEPLOY_DIR}/Carrot.swc"
+            output="${DEPLOY_DIR}/Carrot-${SDK_VERSION}.swc"
             include-classes="com.carrot.Carrot">
             <compiler.define name="CONFIG::AirNative" value="false" />
             <compiler.define name="CONFIG::NotAirNative" value="true" />
             <compiler.include-libraries dir="${basedir}/libs" append="true">
                 <include name="PNGEncoder2_normal.swc"/>
             </compiler.include-libraries>
+            <source-path path-element="${basedir}/src"/>
+        </compc>
+    </target>
+    <target name="aircompile">
+        <compc 
+            output="${DEPLOY_DIR}/Carrot-${SDK_VERSION}-air.swc"
+            include-classes="com.carrot.Carrot">
+            <load-config filename="${FLEX_HOME}/frameworks/air-config.xml" />
+            <compiler.define name="CONFIG::AirNative" value="true" />
+            <compiler.define name="CONFIG::NotAirNative" value="false" />
             <source-path path-element="${basedir}/src"/>
         </compc>
     </target>
@@ -31,7 +42,7 @@
     <target name="clean">
         <delete includeEmptyDirs="true">
             <fileset dir="${DOCS_DIR}" includes="**/*"/>
-            <fileset dir="${DEPLOY_DIR}" includes="Carrot.swc"/>
+            <fileset dir="${DEPLOY_DIR}" includes="Carrot-${SDK_VERSION}.swc"/>
         </delete>
     </target>
 </project>
