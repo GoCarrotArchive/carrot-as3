@@ -411,7 +411,7 @@ CONFIG::AirNative {
 			});
 
 			try {
-				loader.load("http://" + _servicesDiscoveryHost + "/services.json");
+				loader.load("https://" + _servicesDiscoveryHost + "/services.json");
 				return true;
 			}
 			catch(error:Error) {
