@@ -339,11 +339,11 @@ package com.carrot
 CONFIG::AirNative {
 		public function reportNativeInvokeEvent(arguments:Array):void {
 			var args:Array = arguments[0].split("#")[1].split("&");
-			for(var i:uint in args) {
+			for(var i:uint = 0; i < args.length; i++) {
 				var arg:Array = args[i].split("=");
 				if(arg[0] === "target_url") {
 					var params:Array = unescape(arg[1]).split("?")[1].split("&");
-					for(var j:uint in params) {
+					for(var j:uint = 0; j < params.length; j++) {
 						var param:Array = params[j].split("=");
 						if(param[0] === "teak_post_id") {
 							httpRequest("posts.gocarrot.com", URLRequestMethod.POST, "/" + param[1] + "/clicks", {
