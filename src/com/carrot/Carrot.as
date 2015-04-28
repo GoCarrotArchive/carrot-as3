@@ -243,6 +243,19 @@ package com.carrot
 			return callbackId;
 		}
 
+
+		/**
+		 * Post a feed post to the user's wall
+		 *
+		 * This method is used to share arbitrary non-opengraph content to the user's wall.
+		 * Depending on CMS configuration this method may cause a Facebook dialog to appear, or it may share
+		 * seamlessly.
+		 *
+		 * @param objectInstanceId  The identifier for the specific instance that should be posted. This is the value next to the '#' above every object in the list of feed posts.
+		 * @param objectProperties  Properties which can be inserted into the title, description, or link of the post through Custom Variables specified in the CMS.
+		 * @param callback          A function which will be called upon completion of the post. It takes two parameters, the first details the content of the post,
+		 *													the second will contain a 'post_id' value if the post was made, or no post_id value if the user cancelled making the post.
+		 */
 		public function popupFeedPost(objectInstanceId:String, objectProperties:Object, callback:Function = null):Boolean {
 			try {
 				if(ExternalInterface.available) {
