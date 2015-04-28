@@ -170,10 +170,13 @@ package com.carrot
 		}
 
 		/**
-		 * Post an achievement to the Carrot service.
+		 * Post an achievement.
 		 *
-		 * @param achievementId Carrot achivement id of the achievement to post.
-		 * @param callback      A function which will be called upon completion of the achievement post.
+		 * All achievements are defined under the 'earn an achievement' story in your game's
+		 * settings. This call cannot be used to post any other stories.
+		 *
+		 * @param achievementId The object instance identifier of the achievement to be posted.
+		 * @param callback      Optional callback.
 		 */
 		public function postAchievement(achievementId:String, callback:Function = null):Boolean {
 			if(achievementId === null) {
@@ -185,20 +188,22 @@ package com.carrot
 		/**
 		 * Post a high score to the Carrot service.
 		 *
-		 * @param score     High score value to post.
-		 * @param callback  A function which will be called upon completion of the high score post.
+		 * @param score     The user's score. Yes, it's an integer, and yes, you only get one per user per game.
+		 *                  I'm sorry, that's just how Facebook does it...
+		 * @param callback  Optional callback.
 		 */
 		public function postHighScore(score:uint, callback:Function = null):Boolean {
 			return postSignedRequest("/me/scores.json", {value: score}, null, callback);
 		}
 
 		/**
-		 * Post an Open Graph action to the Carrot service.
+		 * Post a custom open graph action.
 		 *
-		 * <p>If creating an object, you are required to include 'object_type' in objectProperties.</p>
+		 * This is the primary work horse of Teak. This method is used to post all custom actions,
+  		 * either as explicitly shared, implicitly shared, with a user message, with custom variables...
 		 *
-		 * @param actionId          Carrot action id.
-		 * @param objectInstanceId  Object instance id of the Carrot object type to create or post; use <code>null</code> if you are creating a throw-away object.
+		 * @param actionId          The identifier for the action, e.g. 'complete'. Refer to the 'Get Code' feature of the story you're implementing to get the correct identifier.
+		 * @param objectInstanceId  The identifier for the specific instance that should be posted. This is the value next to the '#' above every object in a story list.
 		 * @param actionProperties  Properties to be sent along with the Carrot action, or <code>null</code>.
 		 * @param objectProperties  Properties for the new object, if creating an object, or <code>null</code>.
 		 * @param bitmapData        BitmapData to upload, if creating an object, or <code>null</code>.
