@@ -34,6 +34,8 @@
         </delete>
         <mkdir dir="${DOCS_DIR}"/>
         <asdoc output="${DOCS_DIR}" lenient="true" failonerror="true" exclude-dependencies="true">
+            <compiler.define name="CONFIG::AirNative" value="true" />
+            <compiler.define name="CONFIG::NotAirNative" value="false" />
             <compiler.source-path
                 path-element="${basedir}/src"/>
             <doc-classes class="com.carrot.Carrot"/>
