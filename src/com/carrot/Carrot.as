@@ -27,6 +27,7 @@ package com.carrot
 	import flash.display.BitmapData;
 	import flash.system.Capabilities;
 	import flash.events.HTTPStatusEvent;
+	import flash.events.IOErrorEvent;
 	import flash.utils.Dictionary;
 	import ru.inspirit.net.MultipartURLLoader;
 	import ru.inspirit.net.events.MultipartURLLoaderEvent;
