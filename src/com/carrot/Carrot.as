@@ -428,6 +428,10 @@ CONFIG::AirNative {
 				_metricsHostname = services.metrics;
 			});
 
+			loader.addEventListener(IOErrorEvent.IO_ERROR, function(event:Event):void {
+				trace("IO_ERROR: " + event);
+			});
+
 			try {
 				loader.load("https://" + _servicesDiscoveryHost + "/services.json");
 				return true;
@@ -546,6 +550,10 @@ CONFIG::NotAirNative {
 					});
 				}
 			}
+
+			loader.addEventListener(IOErrorEvent.IO_ERROR, function(event:Event):void {
+				trace("IO_ERROR: " + event);
+			});
 
 			loader.addEventListener(Event.COMPLETE, function(event:Event):void {
 				var data:Object = com.carrot.adobe.serialization.json.JSON.decode(loader.loader.data);
